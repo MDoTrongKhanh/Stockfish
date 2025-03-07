@@ -1,4 +1,4 @@
-name: Build Stockfish Dev
+name: Build Stockfish Dev on Windows
 
 on:
   push:
@@ -12,26 +12,27 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: windows-latest  # Chạy trên Windows
     permissions:
       contents: read
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
 
-      - name: List files
-        run: ls -la
-
       - name: Install dependencies
-        run: sudo apt update && sudo apt install -y build-essential clang make
+        run: |
+          choco install make mingw -y
+        shell: powershell
 
       - name: Compile Stockfish
         run: |
-          make -j$(nproc) build ARCH=x86-64
-          mv stockfish stockfish-dev
+          cd src
+          make build ARCH=x86-64
+          move stockfish.exe ..\stockfish-dev.exe
+        shell: cmd
 
       - name: Upload compiled binary
         uses: actions/upload-artifact@v3
         with:
-          name: stockfish-dev
-          path: stockfish-dev
+          name: stockfish-dev-windows
+          path: stockfish-dev.exe
