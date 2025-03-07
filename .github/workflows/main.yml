@@ -1,0 +1,33 @@
+name: Build Stockfish Dev
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  schedule:
+    - cron: '0 0 * * *'  # Build tự động mỗi ngày
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: sudo apt update && sudo apt install -y build-essential gcc g++ make
+
+      - name: Compile Stockfish
+        run: |
+          cd src
+          make -j$(nproc) build ARCH=x86-64
+          mv stockfish ../stockfish-dev
+
+      - name: Upload compiled binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: stockfish-dev
+          path: stockfish-dev
