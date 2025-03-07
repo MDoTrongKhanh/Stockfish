@@ -1,18 +1,14 @@
-name: Run bot on Windows
+name: Build Stockfish Dev on Windows
 
 on:
-  workflow_dispatch:
   push:
     branches:
-      - "main"
-    paths:
-      - "lichess-bot.py"
+      - master
+  pull_request:
+    branches:
+      - master
   schedule:
-    - cron: "1 */4 * * *"
-
-concurrency:
-  group: ${{ github.ref }}
-  cancel-in-progress: true
+    - cron: '0 0 * * *'  # Build tự động mỗi ngày
 
 jobs:
   build:
@@ -21,29 +17,26 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout repository
+      - name: Checkout source code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
+      - name: Set up MSVC compiler
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          choco install make mingw -y
         shell: powershell
 
-      - name: Save Lichess API Key
+      - name: Compile Stockfish
         run: |
-          echo "${{ secrets.LICHESS_KEY }}" > key.txt
-        shell: powershell
-
-      - name: Make engines executable
-        run: |
-          icacls engines/fairy-stockfish-largeboard_x86-64.exe /grant Everyone:F
-          icacls engines/stockfish-ubuntu-x86-64-sse41-popcnt.exe /grant Everyone:F
+          make build ARCH=x86-64
+          move stockfish.exe stockfish-dev.exe
         shell: cmd
 
-      - name: Run Lichess Bot
-  
+      - name: Upload compiled Stockfish binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: stockfish-dev-windows
+          path: stockfish-dev.exe
+          if-no-files-found: error
