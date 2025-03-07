@@ -30,8 +30,9 @@ jobs:
 
       - name: Compile Stockfish
         run: |
-          make build ARCH=x86-64
-          move stockfish.exe stockfish-dev.exe
+          cd src
+          make -j$(nproc) ARCH=x86-64-modern
+          move stockfish.exe ..\stockfish-dev.exe
         shell: cmd
 
       - name: Upload compiled Stockfish binary
