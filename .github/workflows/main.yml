@@ -13,18 +13,22 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
 
+      - name: List files
+        run: ls -la
+
       - name: Install dependencies
-        run: sudo apt update && sudo apt install -y build-essential gcc g++ make
+        run: sudo apt update && sudo apt install -y build-essential clang make
 
       - name: Compile Stockfish
         run: |
-          cd src
           make -j$(nproc) build ARCH=x86-64
-          mv stockfish ../stockfish-dev
+          mv stockfish stockfish-dev
 
       - name: Upload compiled binary
         uses: actions/upload-artifact@v3
