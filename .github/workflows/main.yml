@@ -1,43 +1,41 @@
-name: Build Stockfish Dev on Windows
+name: Build Stockfish 18
 
 on:
   push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
-  schedule:
-    - cron: '0 0 * * *'  # Build tự động mỗi ngày
+    branches: [main]
+    tags:
+      - 'v*'  # Khi tạo tag, nó sẽ tự động phát hành
 
 jobs:
   build:
-    runs-on: windows-latest
-    permissions:
-      contents: read
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up MSVC compiler
-        uses: ilammy/msvc-dev-cmd@v1
+      - name: Install dependencies (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: sudo apt update && sudo apt install -y make g++ || brew install make g++
 
-      - name: Install dependencies
-        run: |
-          choco install make mingw -y
-        shell: powershell
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: choco install mingw
 
-      - name: Compile Stockfish
+      - name: Build Stockfish
         run: |
           cd src
-          make -j$(nproc) ARCH=x86-64-modern
-          move stockfish.exe ..\stockfish-dev.exe
-        shell: cmd
+          make -j$(nproc) build ARCH=x86-64-bmi2 || make -j$(nproc) build ARCH=x86-64-modern
+        shell: bash
 
-      - name: Upload compiled Stockfish binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: stockfish-dev-windows
-          path: stockfish-dev.exe
-          if-no-files-found: error
+      - name: Rename binary
+        run: |
+          cd src
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            mv stockfish.exe stockfish-${{ runner.os }}.exe
+          else
+            mv stockfish
