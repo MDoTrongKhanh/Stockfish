@@ -25,22 +25,23 @@ jobs:
       
       - name: Build Stockfish
         run: |
+          cd src
           make clean
-          make -j build ARCH=${{ matrix.arch }}
+          make -j ARCH=${{ matrix.arch }}
           strip stockfish.exe
       
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: stockfish-windows-${{ matrix.arch }}
-          path: stockfish.exe
+          path: src/stockfish.exe
           if-no-files-found: error
 
       - name: Upload to GitHub Releases
         uses: softprops/action-gh-release@v1
         if: github.event_name == 'push'
         with:
-          files: stockfish.exe
+          files: src/stockfish.exe
           tag_name: latest
           release_name: Stockfish Latest Release
           draft: false
