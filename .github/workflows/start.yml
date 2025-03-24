@@ -1,10 +1,10 @@
-name: Build Stockfish 18 Demo
+name: Build Stockfish 18
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 jobs:
@@ -36,47 +36,12 @@ jobs:
           path: stockfish.exe
           if-no-files-found: error
 
-  build-linux:
-    runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        arch: ["x86-64-bmi2", "x86-64-modern", "x86-64"]
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install dependencies
-        run: sudo apt update && sudo apt install -y build-essential
-      
-      - name: Build Stockfish
-        run: |
-          make clean
-          make -j build ARCH=${{ matrix.arch }}
-          strip stockfish
-      
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload to GitHub Releases
+        uses: softprops/action-gh-release@v1
+        if: github.event_name == 'push'
         with:
-          name: stockfish-linux-${{ matrix.arch }}
-          path: stockfish
-          if-no-files-found: error
-
-  build-macos:
-    runs-on: macos-13
-    strategy:
-      matrix:
-        arch: ["x86-64"]
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Build Stockfish
-        run: |
-          make clean
-          make -j build ARCH=${{ matrix.arch }}
-          strip stockfish
-      
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: stockfish-macos-${{ matrix.arch }}
-          path: stockfish
-          if-no-files-found: error
+          files: stockfish.exe
+          tag_name: latest
+          release_name: Stockfish Latest Release
+          draft: false
+          prerelease: false
