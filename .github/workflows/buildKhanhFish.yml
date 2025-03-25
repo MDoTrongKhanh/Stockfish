@@ -1,0 +1,41 @@
+name: Build KhanhFish
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: sudo apt-get update && sudo apt-get install -y make g++
+
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install make mingw
+
+      - name: Build KhanhFish
+        run: |
+          cd src
+          make -j$(nproc) build ARCH=x86-64
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: khanhfish-${{ runner.os }}
+          path: src/khanhfish
