@@ -1,4 +1,4 @@
-name: Build KhanhFish
+name: Build KhanhFish (Windows)
 
 on:
   push:
@@ -11,31 +11,27 @@ on:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [windows-latest]
-
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
+      - name: Install dependencies
         run: |
           choco install make mingw
 
-      - name: Build KhanhFish (Windows)
-        if: runner.os == 'Windows'
+      - name: Build KhanhFish
         run: |
           cd src
           make -j4 build ARCH=x86-64
 
+      - name: Debug build output
+        run: |
+          ls -lR src
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: khanhfish-${{ runner.os }}
-          path: src/khanhfish
-
-
+          name: khanhfish-windows
+          path: src/khanhfish.exe
