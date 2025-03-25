@@ -30,13 +30,39 @@ jobs:
         run: |
           choco install make mingw
 
-      - name: Build KhanhFish
+      - name: Build KhanhFish (Linux/macOS)
+        if: runner.os != 'Windows'
         run: |
           cd src
           make -j$(nproc) build ARCH=x86-64
+
+      - name: Build KhanhFish (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd src
+          make -j4 build ARCH=x86-64
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: khanhfish-${{ runner.os }}
           path: src/khanhfish
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**
+          tag_name: latest
+          name: KhanhFish Latest Release
+          body: "Latest build of KhanhFish engine."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
