@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch:  # Cho phép chạy build thủ công từ GitHub Actions
 
 jobs:
   build:
@@ -24,11 +24,11 @@ jobs:
       - name: Build KhanhFish
         run: |
           cd src
-          make -j4 build ARCH=x86-64
+          make ARCH=x86-64
 
       - name: Debug build output
         run: |
-          ls -lR src
+          dir /s /b src
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
